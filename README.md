@@ -1,5 +1,12 @@
 # BigQuery Release Notes Explorer 🚀
 
+[![CI Build & Security Scan](https://github.com/Binary-yev/antigravity-event-talks-app/actions/workflows/ci.yml/badge.svg)](https://github.com/Binary-yev/antigravity-event-talks-app/actions/workflows/ci.yml)
+[![CodeQL Security Scanning](https://github.com/Binary-yev/antigravity-event-talks-app/actions/workflows/codeql.yml/badge.svg)](https://github.com/Binary-yev/antigravity-event-talks-app/actions/workflows/codeql.yml)
+[![Python Version](https://img.shields.io/badge/python-3.11-blue.svg)](https://www.python.org/)
+[![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![Dependabot](https://img.shields.io/badge/dependabot-enabled-blue.svg?logo=dependabot)](https://github.com/Binary-yev/antigravity-event-talks-app/security/dependabot)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A premium developer dashboard built with **Python Flask**, **Vanilla HTML5**, **CSS3**, and **ES6 JavaScript** that fetches, parses, and formats the official Google Cloud BigQuery Release Notes feed. It allows developers to browse, search, filter updates, and immediately compose and share posts to X (Twitter).
 
 ## 🎨 Visual Interface Preview
