@@ -16,6 +16,8 @@ const DOM = {
     releasesList: document.getElementById('releases-list'),
     updateCount: document.getElementById('update-count'),
     exportCsvBtn: document.getElementById('export-csv-btn'), // Export CSV button
+    themeToggleBtn: document.getElementById('theme-toggle'), // Theme Toggle button
+
     
     // Detail Pane
     detailPane: document.getElementById('detail-pane'),
@@ -43,6 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initApp() {
+    // Load and apply saved theme preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+    }
+
     // Fetch initial feed data
     fetchReleases();
 
@@ -50,6 +58,12 @@ function initApp() {
     DOM.refreshBtn.addEventListener('click', () => {
         fetchReleases(true);
     });
+
+    // Theme toggle button event
+    DOM.themeToggleBtn.addEventListener('click', () => {
+        toggleTheme();
+    });
+
 
     // Search input typing event
     DOM.searchInput.addEventListener('input', (e) => {
@@ -479,4 +493,11 @@ function exportToCSV() {
         showToast('Failed to export to CSV file', 'error');
     }
 }
+
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light-theme');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    showToast(`Switched to ${isLight ? 'Light' : 'Dark'} mode`, 'success');
+}
+
 
