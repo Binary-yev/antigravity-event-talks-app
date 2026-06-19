@@ -575,6 +575,12 @@ body.light-theme .theme-toggle .moon-icon {
     box-shadow: 0 0 12px rgba(59, 130, 246, 0.1);
 }
 
+.release-card:focus-visible {
+    outline: 2px solid var(--accent-blue);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px var(--accent-blue-glow);
+}
+
 .card-meta {
     display: flex;
     justify-content: space-between;
@@ -608,10 +614,27 @@ body.light-theme .theme-toggle .moon-icon {
 .copy-card-btn svg {
     width: 0.95rem;
     height: 0.95rem;
+    transition: transform var(--transition-fast) cubic-bezier(0.34, 1.56, 0.64, 1), opacity var(--transition-fast) ease;
 }
 
 .copy-card-btn .check-icon {
     color: var(--badge-feature-text);
+}
+
+/* Micro-animations for card copy icon pop */
+.copy-card-btn .check-icon:not(.hidden) {
+    animation: pop-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes pop-in {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 
@@ -886,6 +909,17 @@ body.light-theme .theme-toggle .moon-icon {
     box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.15);
 }
 
+/* Dynamic limits alerts on textareas */
+.textarea-wrapper:has(#tweet-textarea.danger-border) {
+    border-color: var(--badge-deprecated-text) !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.textarea-wrapper:has(#tweet-textarea.warning-border) {
+    border-color: var(--badge-issue-text) !important;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15) !important;
+}
+
 #tweet-textarea {
     width: 100%;
     padding: 0.85rem;
@@ -1015,6 +1049,45 @@ body.light-theme .theme-toggle .moon-icon {
 .toast.fade-out {
     opacity: 0;
     transform: translateY(-1rem);
+}
+
+/* Mobile Back Navigation Button (only visible on mobile screens) */
+.mobile-back-nav {
+    display: none;
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--bg-tertiary);
+}
+
+.mobile-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.mobile-back-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--border-hover);
+}
+
+.mobile-back-btn svg {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+@media (max-width: 1024px) {
+    .mobile-back-nav {
+        display: block;
+    }
 }
 
 /* -------------------------------------------------------------

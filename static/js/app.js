@@ -98,6 +98,17 @@ function initApp() {
     DOM.exportCsvBtn.addEventListener('click', () => {
         exportToCSV();
     });
+
+    // Mobile back navigation trigger
+    const mobileBackBtn = document.getElementById('mobile-back-btn');
+    if (mobileBackBtn) {
+        mobileBackBtn.addEventListener('click', () => {
+            const listPane = document.querySelector('.list-pane');
+            if (listPane) {
+                listPane.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    }
 }
 
 
@@ -207,8 +218,26 @@ function filterAndRender() {
                 </svg>
                 <h3>No Updates Found</h3>
                 <p>Try clearing your search query or selecting a different category filter.</p>
+                <button id="reset-filters-btn" class="btn btn-secondary" style="margin-top: 1rem; font-size: 0.8rem; height: 2rem; padding: 0 1rem;">Reset Filters & Search</button>
             </div>
         `;
+        
+        const resetBtn = document.getElementById('reset-filters-btn');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                state.searchQuery = '';
+                state.activeCategory = 'all';
+                DOM.searchInput.value = '';
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    if (b.dataset.category === 'all') {
+                        b.classList.add('active');
+                    } else {
+                        b.classList.remove('active');
+                    }
+                });
+                filterAndRender();
+            });
+        }
         return;
     }
 
@@ -306,6 +335,11 @@ function selectRelease(id) {
 
     // Scroll details to top smoothly
     DOM.detailPane.querySelector('.detail-content').scrollTo({ top: 0, behavior: 'smooth' });
+
+    // For mobile/stacked screens, automatically scroll detail pane into view
+    if (window.innerWidth <= 1024) {
+        DOM.detailPane.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 // -------------------------------------------------------------
@@ -348,15 +382,20 @@ function updateCharCount() {
     const remaining = 280 - tweetLen;
     DOM.charCounter.textContent = remaining;
 
-    // Update counter styling warnings
+    // Update counter and textarea border visual styles
     if (remaining < 0) {
         DOM.charCounter.className = 'char-counter danger';
+        DOM.tweetTextarea.classList.add('danger-border');
+        DOM.tweetTextarea.classList.remove('warning-border');
         DOM.tweetBtn.disabled = true;
     } else if (remaining < 30) {
         DOM.charCounter.className = 'char-counter warning';
+        DOM.tweetTextarea.classList.add('warning-border');
+        DOM.tweetTextarea.classList.remove('danger-border');
         DOM.tweetBtn.disabled = false;
     } else {
         DOM.charCounter.className = 'char-counter';
+        DOM.tweetTextarea.classList.remove('danger-border', 'warning-border');
         DOM.tweetBtn.disabled = false;
     }
 }
