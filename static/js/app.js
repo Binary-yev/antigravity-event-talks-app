@@ -3,7 +3,8 @@ let state = {
     releases: [],
     selectedId: null,
     activeCategory: 'all',
-    searchQuery: ''
+    searchQuery: '',
+    filteredReleases: [] // Cache currently visible items for CSV export
 };
 
 // DOM Elements
@@ -14,6 +15,7 @@ const DOM = {
     categoryFilters: document.getElementById('category-filters'),
     releasesList: document.getElementById('releases-list'),
     updateCount: document.getElementById('update-count'),
+    exportCsvBtn: document.getElementById('export-csv-btn'), // Export CSV button
     
     // Detail Pane
     detailPane: document.getElementById('detail-pane'),
@@ -31,6 +33,7 @@ const DOM = {
     tweetBtn: document.getElementById('tweet-btn'),
     toastContainer: document.getElementById('toast-container')
 };
+
 
 // -------------------------------------------------------------
 // EVENT LISTENERS & INITS
@@ -76,7 +79,13 @@ function initApp() {
     DOM.tweetBtn.addEventListener('click', () => {
         shareOnTwitter();
     });
+
+    // Export CSV click event
+    DOM.exportCsvBtn.addEventListener('click', () => {
+        exportToCSV();
+    });
 }
+
 
 // -------------------------------------------------------------
 // API CLIENT
@@ -171,6 +180,8 @@ function filterAndRender() {
         return matchesCategory && matchesSearch;
     });
 
+    // Cache the visible filtered records for CSV exports
+    state.filteredReleases = filtered;
     DOM.updateCount.textContent = `${filtered.length} items`;
 
     if (filtered.length === 0) {
@@ -187,23 +198,32 @@ function filterAndRender() {
         return;
     }
 
-    // Generate list HTML
+    // Generate list HTML with Clipboard Copy button inside card headers
     DOM.releasesList.innerHTML = filtered.map(item => {
         const snippet = makeExcerpt(item.content);
         const isActive = item.id === state.selectedId ? 'active' : '';
         
         return `
-
             <div class="release-card ${item.type} ${isActive}" data-id="${item.id}" tabindex="0" role="button">
                 <div class="card-meta">
                     <span class="card-date">${item.date}</span>
-                    <span class="badge ${item.type}">${item.type}</span>
+                    <div class="card-meta-right">
+                        <button class="copy-card-btn" data-id="${item.id}" title="Copy description to clipboard" aria-label="Copy description">
+                            <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M16 4H18C18.5304 4 19.0391 4.21071 19.4142 4.58579C19.7893 4.96086 20 5.46957 20 6V20C20 20.5304 19.7893 21.0391 19.4142 21.4142C19.0391 21.7893 18.5304 22 18 22H6C5.46957 22 4.96086 21.7893 4.58579 21.4142C4.21071 21.0391 4 20.5304 4 20V6C4 5.46957 4.21071 4.96086 4.58579 4.58579C4.96086 4.21071 5.46957 4 6 4H8"/>
+                                <rect x="8" y="2" width="8" height="4" rx="1"/>
+                            </svg>
+                            <svg class="check-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 6L9 17L4 12"/>
+                            </svg>
+                        </button>
+                        <span class="badge ${item.type}">${item.type}</span>
+                    </div>
                 </div>
                 <div class="card-excerpt">${snippet}</div>
             </div>
         `;
     }).join('');
-
 
     // Attach click events to the cards
     document.querySelectorAll('.release-card').forEach(card => {
@@ -218,7 +238,21 @@ function filterAndRender() {
             }
         });
     });
+
+    // Attach click events to copy buttons inside cards
+    document.querySelectorAll('.copy-card-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Stop click from bubbling up and selecting card
+            copyCardContent(btn);
+        });
+        btn.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.stopPropagation(); // Stop enter/space selection bubbling
+            }
+        });
+    });
 }
+
 
 // -------------------------------------------------------------
 // DETAIL PANE LOGIC
@@ -374,3 +408,75 @@ function showToast(message, type = 'success') {
         });
     }, 3500);
 }
+
+// -------------------------------------------------------------
+// NEW UTILITY FEATURES
+// -------------------------------------------------------------
+function copyCardContent(btn) {
+    const release = state.releases.find(item => item.id === btn.dataset.id);
+    if (!release) return;
+
+    const plainText = stripHtml(release.content);
+    
+    navigator.clipboard.writeText(plainText).then(() => {
+        // Toggle icon visual feedback
+        const copyIcon = btn.querySelector('.copy-icon');
+        const checkIcon = btn.querySelector('.check-icon');
+        
+        copyIcon.classList.add('hidden');
+        checkIcon.classList.remove('hidden');
+        
+        showToast('Description copied to clipboard!', 'success');
+        
+        // Revert checkmark back to clipboard after delay
+        setTimeout(() => {
+            copyIcon.classList.remove('hidden');
+            checkIcon.classList.add('hidden');
+        }, 1500);
+    }).catch(err => {
+        console.error('Clipboard write failed:', err);
+        showToast('Failed to copy to clipboard', 'error');
+    });
+}
+
+function exportToCSV() {
+    const items = state.filteredReleases || [];
+    if (items.length === 0) {
+        showToast('No updates available to export.', 'error');
+        return;
+    }
+
+    // Define CSV Headers with UTF-8 BOM for Excel compliance
+    let csvContent = "\ufeffDate,Type,Description,Link\r\n";
+    
+    items.forEach(item => {
+        const escapeCSV = (text) => `"${text.replace(/"/g, '""')}"`;
+        
+        const dateVal = escapeCSV(item.date);
+        const typeVal = escapeCSV(item.type);
+        const descVal = escapeCSV(stripHtml(item.content));
+        const linkVal = escapeCSV(item.link);
+        
+        csvContent += `${dateVal},${typeVal},${descVal},${linkVal}\r\n`;
+    });
+
+    try {
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const downloadLink = document.createElement("a");
+        
+        const fileTimestamp = new Date().toISOString().slice(0, 10);
+        downloadLink.setAttribute("href", url);
+        downloadLink.setAttribute("download", `BigQuery_Releases_Export_${fileTimestamp}.csv`);
+        
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        showToast(`Successfully exported ${items.length} records to CSV!`, 'success');
+    } catch (err) {
+        console.error('CSV Export failed:', err);
+        showToast('Failed to export to CSV file', 'error');
+    }
+}
+
